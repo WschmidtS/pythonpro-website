@@ -51,23 +51,18 @@ def test_module_link_not_logged(modules, resp_not_logged):
 
 
 def test_module_index_link_logged(resp):
-    """ Assert module index link is not present when user is logged """
+    """ Assert module index link is present when user is logged """
     url = reverse('modules:index')
-    dj_assert_not_contains(resp, f'href="{url}"')
+    dj_assert_contains(resp, f'href="{url}"')
 
 
-def test_module_link_logged(modules, resp):
-    """ Assert module links are present when user is logged """
+def test_present_attrs(modules, resp_not_logged):
     for module in modules:
-        dj_assert_contains(resp, f'href="{module.get_absolute_url()}"')
+        dj_assert_contains(resp_not_logged, module.title)
+        dj_assert_contains(resp_not_logged, module.objective[:71])
 
 
-def test_anchor(modules, resp_not_logged):
+def test_module_description_links(modules, resp_not_logged):
+    """ Assert module description link are present for not logged users """
     for module in modules:
-        dj_assert_contains(resp_not_logged, f'<h1 id="{module.slug}"')
-
-
-@pytest.mark.parametrize('attr_name', 'title objective description target'.split())
-def test_present_attrs(modules, resp_not_logged, attr_name):
-    for module in modules:
-        dj_assert_contains(resp_not_logged, getattr(module, attr_name))
+        dj_assert_contains(resp_not_logged, reverse('modules:description', kwargs={'slug': module.slug}))

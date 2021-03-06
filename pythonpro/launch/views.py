@@ -7,8 +7,8 @@ from django.views.static import serve
 
 from pythonpro.absolute_uri import build_absolute_uri
 from pythonpro.cohorts.facade import find_most_recent_cohort
-from pythonpro.domain import user_facade
-from pythonpro.email_marketing import facade as email_marketing_facade
+from pythonpro.domain import user_domain
+from pythonpro.domain import subscription_domain
 from pythonpro.launch.facade import (
     get_launch_status,
     get_opened_cpls,
@@ -20,9 +20,14 @@ from pythonpro.launch.forms import LeadForm
 
 def landing_page(request):
     user = request.user
+
+    launch_status = get_launch_status()
+    if launch_status == LAUNCH_STATUS_OPEN_CART and not request.GET.get('debug'):
+        return redirect(reverse('checkout:bootcamp_lp'))
+
     if user.is_authenticated:
         form = LeadForm({'email': user.email})
-        user_facade.visit_launch_landing_page(user, request.GET.get('utm_source', 'unknown'))
+        user_domain.visit_launch_landing_page(user, request.GET.get('utm_source', 'unknown'))
     else:
         form = LeadForm()
     return render(request, 'launch/landing_page.html', {'form': form})
@@ -35,13 +40,16 @@ def lead_form(request):
     email = form.cleaned_data['email']
     first_name = form.cleaned_data['name']
     user = request.user
+    session_id = request.session.session_key
     if user.is_authenticated:
-        email_marketing_facade.create_or_update_with_no_role.delay(
+        subscription_domain.subscribe_with_no_role.delay(
+            session_id,
             first_name,
             email,
             f'turma-{find_most_recent_cohort().slug}-semana-do-programador', id=user.id)
     else:
-        email_marketing_facade.create_or_update_with_no_role.delay(
+        subscription_domain.subscribe_with_no_role.delay(
+            session_id,
             first_name,
             email,
             f'turma-{find_most_recent_cohort().slug}-semana-do-programador')
@@ -51,13 +59,13 @@ def lead_form(request):
 def ty(request):
     user = request.user
     if user.is_authenticated:
-        user_facade.subscribe_launch_landing_page(user, request.GET.get('utm_source', 'unknown'))
+        user_domain.subscribe_launch_landing_page(user, request.GET.get('utm_source', 'unknown'))
     return render(request, 'launch/ty.html')
 
 
 def cpl1(request):
     user = request.user
-    visit_function = user_facade.visit_cpl1
+    visit_function = user_domain.visit_cpl1
     video_id = 'Rwt6wYrDeYY'
     video_id_next_class = 'WK1sCtvGjBU'
     description = (
@@ -72,7 +80,7 @@ def cpl1(request):
 
 def cpl2(request):
     user = request.user
-    visit_function = user_facade.visit_cpl2
+    visit_function = user_domain.visit_cpl2
     video_id = 'WK1sCtvGjBU'
     video_id_next_class = 'ADhQ7H8-hxw'
     title = 'AULA #2: Os Fundamentos da PROGRAMAÇÃO PROCEDURAL'
@@ -89,7 +97,7 @@ def cpl2(request):
 
 def cpl3(request):
     user = request.user
-    visit_function = user_facade.visit_cpl3
+    visit_function = user_domain.visit_cpl3
     video_id = 'ADhQ7H8-hxw'
     video_id_next_class = 'QNo7gS_dsUw'
     title = 'AULA #3: Descobrindo o Mundo da ORIENTAÇÃO A OBJETO'
@@ -107,7 +115,7 @@ def cpl3(request):
 
 def cpl4(request):
     user = request.user
-    visit_function = user_facade.visit_cpl3
+    visit_function = user_domain.visit_cpl3
     video_id = 'QNo7gS_dsUw'
     title = 'AULA #4: Voando com Python + Resumão'
     description = (
@@ -160,6 +168,6 @@ def onesignal_sdk_updater_worker(request):
 def _render_launch_page(is_launch_open, request, template_closed_launch, template_open_launch, redirect_path_name: str):
     user = request.user
     if user.is_authenticated:
-        user_facade.visit_member_landing_page(request.user, source=request.GET.get('utm_source', default='unknown'))
+        user_domain.visit_member_landing_page(request.user, source=request.GET.get('utm_source', default='unknown'))
     template = template_closed_launch
     return render(request, template, {})

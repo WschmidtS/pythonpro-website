@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 import responses
 from django.urls import reverse
@@ -22,7 +24,7 @@ TRANSACTION_ID = 7656690
 @pytest.fixture
 def create_or_update_member_mock(mocker):
     return mocker.patch(
-        'pythonpro.domain.user_facade._email_marketing_facade.create_or_update_member.delay',
+        'pythonpro.domain.user_domain._email_marketing_facade.create_or_update_member.delay',
         side_effect=email_marketing_facade.create_or_update_member
     )
 
@@ -30,7 +32,7 @@ def create_or_update_member_mock(mocker):
 @pytest.fixture
 def create_or_update_lead_mock(mocker):
     return mocker.patch(
-        'pythonpro.domain.user_facade._email_marketing_facade.create_or_update_lead.delay',
+        'pythonpro.domain.user_domain._email_marketing_facade.create_or_update_lead.delay',
         side_effect=email_marketing_facade.create_or_update_lead
     )
 
@@ -45,18 +47,18 @@ def payment_handler_task_mock(mocker):
 
 @pytest.fixture
 def remove_tags_mock(mocker):
-    return mocker.patch('pythonpro.domain.user_facade._email_marketing_facade.remove_tags.delay')
+    return mocker.patch('pythonpro.domain.user_domain._email_marketing_facade.remove_tags.delay')
 
 
 @pytest.fixture
 def sync_on_discourse_mock(mocker):
-    return mocker.patch('pythonpro.domain.user_facade.sync_user_on_discourse.delay')
+    return mocker.patch('pythonpro.domain.user_domain.sync_user_on_discourse.delay')
 
 
 @pytest.fixture
 def create_or_update_webdev_mock(mocker):
     return mocker.patch(
-        'pythonpro.domain.user_facade._email_marketing_facade.create_or_update_webdev.delay',
+        'pythonpro.domain.user_domain._email_marketing_facade.create_or_update_webdev.delay',
         side_effect=email_marketing_facade.create_or_update_webdev
     )
 
@@ -64,7 +66,7 @@ def create_or_update_webdev_mock(mocker):
 @pytest.fixture
 def create_or_update_data_scientist_mock(mocker):
     return mocker.patch(
-        'pythonpro.domain.user_facade._email_marketing_facade.create_or_update_data_scientist.delay',
+        'pythonpro.domain.user_domain._email_marketing_facade.create_or_update_data_scientist.delay',
         side_effect=email_marketing_facade.create_or_update_data_scientist
     )
 
@@ -72,7 +74,7 @@ def create_or_update_data_scientist_mock(mocker):
 @pytest.fixture
 def create_or_update_bootcamper_mock(mocker):
     return mocker.patch(
-        'pythonpro.domain.user_facade._email_marketing_facade.create_or_update_bootcamper.delay',
+        'pythonpro.domain.user_domain._email_marketing_facade.create_or_update_bootcamper.delay',
         side_effect=email_marketing_facade.create_or_update_bootcamper
     )
 
@@ -80,7 +82,7 @@ def create_or_update_bootcamper_mock(mocker):
 @pytest.fixture
 def create_or_update_pythonist_mock(mocker):
     return mocker.patch(
-        'pythonpro.domain.user_facade._email_marketing_facade.create_or_update_pythonista.delay',
+        'pythonpro.domain.user_domain._email_marketing_facade.create_or_update_pythonista.delay',
         side_effect=email_marketing_facade.create_or_update_pythonista
     )
 
@@ -107,10 +109,11 @@ def test_status_code(resp, active_product_item):
     assert resp.url == reverse('django_pagarme:thanks', kwargs={'slug': active_product_item.slug})
 
 
-def test_send_purchase_notification(resp, send_purchase_notification_mock):
-    send_purchase_notification_mock.assert_called_once_with(
-        django_pagarme_facade.find_payment_by_transaction(TRANSACTION_ID).id
-    )
+def test_send_purchase_notification(resp, send_purchase_notification_mock, active_product_item):
+    if active_product_item.slug.startswith('bootcamp'):
+        send_purchase_notification_mock.assert_called_once_with(
+            django_pagarme_facade.find_payment_by_transaction(TRANSACTION_ID).id
+        )
 
 
 def test_user_is_created(resp, django_user_model):
@@ -128,7 +131,7 @@ def test_user_is_promoted(resp, django_user_model, active_product_item):
 def assert_user_promoted(user, slug):
     if slug.startswith('membership'):
         assert core_facade.is_member(user)
-    elif slug.startswith('webdev'):
+    elif slug.startswith('webdev') or slug.startswith('treinamento-devpro'):
         assert core_facade.is_webdev(user)
     elif slug.startswith('data-science'):
         assert core_facade.is_data_scientist(user)
@@ -139,6 +142,8 @@ def assert_user_promoted(user, slug):
         assert core_facade.is_bootcamper(user)
     elif slug == 'pacote-proximo-nivel-67-discount':
         assert core_facade.is_pythonista(user)
+    elif slug == 'aps':
+        pass  # no promotion required
     else:
         pytest.fail(f'Invalid slug prefix {slug}')
 
@@ -147,11 +152,12 @@ def test_user_is_subscribed_to_cohort(resp, django_user_model, cohort, active_pr
     User = django_user_model
     user = User.objects.first()
     slug = active_product_item.slug
-    asssert_subscribed_to_cohort(cohort, slug, user)
+    assert_subscribed_to_cohort(cohort, slug, user)
 
 
-def asssert_subscribed_to_cohort(cohort, slug, user):
-    if not (slug.startswith('webdev') or slug.startswith('data-science') or slug == 'pacote-proximo-nivel-67-discount'):
+def assert_subscribed_to_cohort(cohort, slug, user):
+    if not (slug.startswith('webdev') or slug.startswith('treinamento-devpro') or slug.startswith(
+            'data-science') or slug == 'pacote-proximo-nivel-67-discount' or slug == 'aps'):
         assert cohort.students.first() == user
 
 
@@ -161,6 +167,8 @@ def test_user_synced_on_discourse(resp, django_user_model, sync_on_discourse_moc
     if active_product_item.slug in {'bootcamp', 'bootcamp-webdev'}:
         user_sync_call = mocker.call(user.id)
         assert sync_on_discourse_mock.mock_calls == [user_sync_call, user_sync_call]
+    elif active_product_item.slug == 'aps':
+        assert sync_on_discourse_mock.call_count == 0
     else:
         sync_on_discourse_mock.assert_called_once_with(user.id)
 
@@ -170,6 +178,15 @@ def test_payment_linked_with_created_user(resp, django_user_model):
     user = User.objects.first()
     payment = django_pagarme_facade.find_payment_by_transaction(str(TRANSACTION_ID))
     assert user == payment.user
+
+
+def test_phone_in_the_parameters(resp, create_or_update_lead_mock):
+    create_or_update_lead_mock.assert_called_once_with(
+        'Agora',
+        'captura@gmail.com',
+        id=mock.ANY,
+        phone='+5512997411854'
+    )
 
 
 # Tests user logged
@@ -195,7 +212,7 @@ def test_payment_linked_with_logged_user(resp_logged_user, logged_user):
 
 
 def test_logged_user_is_subscribed_to_cohort(resp_logged_user, logged_user, cohort, active_product_item):
-    asssert_subscribed_to_cohort(cohort, active_product_item.slug, logged_user)
+    assert_subscribed_to_cohort(cohort, active_product_item.slug, logged_user)
 
 
 def test_logged_user_is_synced_on_discourse(resp_logged_user, logged_user, sync_on_discourse_mock, active_product_item,
@@ -203,6 +220,8 @@ def test_logged_user_is_synced_on_discourse(resp_logged_user, logged_user, sync_
     if active_product_item.slug in {'bootcamp', 'bootcamp-webdev'}:
         user_sync_call = mocker.call(logged_user.id)
         assert sync_on_discourse_mock.mock_calls == [user_sync_call, user_sync_call]
+    elif active_product_item.slug == 'aps':
+        assert sync_on_discourse_mock.call_count == 0
     else:
         sync_on_discourse_mock.assert_called_once_with(logged_user.id)
 

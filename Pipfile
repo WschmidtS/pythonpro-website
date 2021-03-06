@@ -21,20 +21,21 @@ django-sitemaps = "*"
 django-role-permissions = "*"
 responses = "*"
 newrelic = "*"
-pagarme-python = "*"
+pagarme-python = {editable = true, git = "https://github.com/pythonprobr/pagarme-python.git", ref = "117"}
 sentry-sdk = "*"
 python-dateutil = "*"
 django-extensions = "*"
 activecampaign-python = {editable = true,git = "https://github.com/renzon/activecampaign-python.git",ref = "update-list"}
 codecov = "*"
 django-bootstrap4 = "*"
-celery = "*"
+celery = "<5.0.0"
 redis = "*"
 inflection = "*"
 django-two-factor-auth = "*"
 django-recaptcha = "*"
 django-pagarme = "*"
 django-redis = "*"
+posthog = "*"
 
 [dev-packages]
 faker = "*"

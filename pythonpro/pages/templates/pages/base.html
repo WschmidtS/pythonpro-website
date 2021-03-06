@@ -10,40 +10,33 @@
             <div class="row">
                 <div class="col">
                     
-                    <img class="img-renzo float-right" src="{% static 'img/spp/renzo/about-renzo-nuccitelli-desktop.png' %}" alt="Renzo Nuccitelli com braços cruzados, olhando para foto. Fundo verde abacate com códigos escritos em branco. Imagem grande">
-                    <h2 class='mt-5 mb-5 font-weight-bold'><u>CONHEÇA SEU PROFESSOR!</u></h2>
+                    <img class="img-renzo float-right not-iphone" src="{% static 'img/spp/renzo/about-renzo-nuccitelli-desktop.webp' %}" alt="Renzo Nuccitelli com braços cruzados, olhando para foto. Fundo verde abacate com códigos escritos em branco. Imagem grande">
+                    {% comment %} <img class="img-renzo float-right only-iphone" src="{% static 'img/spp/renzo/about-renzo-nuccitelli-desktop.png' %}" alt="Renzo Nuccitelli com braços cruzados, olhando para foto. Fundo verde abacate com códigos escritos em branco. Imagem grande"> {% endcomment %}
+                    <h2 class='mt-5 font-weight-bold'><u>CONHEÇA SEU PROFESSOR!</u></h2>
                     
                     <p>
                         Olá! Eu me chamo <b>Renzo Nuccitelli</b>. Muito prazer! 
                     </p>
                     <p>
-                        Sou programador há 13 anos, palestrante, consultor, 
+                        Sou programador há 14 anos, palestrante, consultor, 
                         diretor de tecnologia e, principalmente, professor.
                     </p>
                     <p>
-                        Meu sonho sempre foi que as pessoas pudessem construir as mesmas oportunidades que construí...    
+                        <b>Sou Engenheiro de Computação formado pelo ITA.</b> Especialista em Programação Web 
+                        e em teste automáticos. Fui <b>Engenheiro de Qualidade Sênior na Red Hat</b> durante 2 anos.
+                        Também fui <b>Diretor de Tecnologia</b> nas empresas QMagico e Pricez. 
                     </p>
 
                     <p>
-                        Sou Engenheiro de Computação formado pelo ITA. Especialista em programação web.
+                        Sou apaixonado por dar aula!
+                        Fui <b>professor da FATEC São José dos Campos</b> durante 4 anos.
+                        Já palestrei em eventos como PyCon US, Google Developer Bus, 
+                        DevFest, Rupy e Python Brasil.
                     </p>
-
                     <p>
-                        Fui Diretor de Tecnologia na startup de educação QMagico e Pricez. Por lá, estruturei os times de tecnologia e todo o processo de desenvolvimento.
+                        <b>Meu sonho sempre foi que as pessoas pudessem construir as 
+                        mesmas oportunidades que construí...</p>
                     </p>
-
-                    <p>
-                        Sou apaixonado por dar aula! Fui professor da Fatec durante 4 anos, ministrando as matérias de "Orientação a Objetos", "Aplicações para Internet", "Estrutura de Dados" e "Javascript". 
-                    </p>
-                    
-                    <p>
-                        Já palestrei em eventos como Pycon US, Google Developer Bus, DevFest, Rupy e Python Brasil.
-                    </p>
-
-                    <p>
-                        Também sou especialista em teste automáticos. Fui Engenheiro de Qualidade Sênior na Red Hat durante 2 anos.
-                    </p>
-
                 </div>
             </div>
         </div>
@@ -52,10 +45,21 @@
 {% endblock %}
 
 {% block styles %}
-    {{ block.super }}
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
     <style>
+        @supports not (-webkit-touch-callout: none) {
+            .only-iphone {
+                /* CSS for other than iOS devices */ 
+                display: none;
+            }
+        }
+        @supports (-webkit-touch-callout: none) {
+            .not-iphone {
+               /* CSS specific to iOS devices */ 
+               display: none;
+            }
+        }
         @font-face {
             font-family: 'Gilroy-Bold';
             font-style: normal;
@@ -97,8 +101,8 @@
         }
         .img-renzo {
             max-width: 400px;
-            margin-top: -80px;
-            margin-bottom: -100px;
+            margin-top: -10px;
+            margin-bottom: -50px;
         }
         .container {
             max-width: 960px;

@@ -30,6 +30,8 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # Redirect to HTTPS:
 SECURE_SSL_REDIRECT = not DEBUG
 
+SECURE_REFERRER_POLICY = None
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=[], cast=Csv())
 
 PAGARME_CRYPTO_KEY = config('PAGARME_CRYPTO_KEY')
@@ -141,6 +143,7 @@ TEMPLATES = [
                 'pythonpro.core.context_processors.global_settings',
                 'pythonpro.modules.context_processors.global_settings',
                 'pythonpro.cohorts.context_processors.global_settings',
+                'pythonpro.analytics.context_processors.posthog_configurations',
             ],
         },
     },
@@ -306,3 +309,11 @@ CELERY_TIMEZONE = TIME_ZONE
 
 # Hotzapp configuration
 HOTZAPP_API_URL = config('HOTZAPP_API_URL')
+
+# PostHog configuration
+POSTHOG_API_URL = config('POSTHOG_API_URL')
+POSTHOG_API_KEY = config('POSTHOG_API_KEY')
+
+# needed to allow iframes in pixeling system
+X_FRAME_OPTIONS = 'ALLOWALL'
+XS_SHARING_ALLOWED_METHODS = ['GET']

@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 import responses
 from django.urls import reverse
@@ -26,7 +28,7 @@ BOLETO_BARCODE = '123455'
 @pytest.fixture
 def create_or_update_lead_mock(mocker):
     return mocker.patch(
-        'pythonpro.domain.user_facade._email_marketing_facade.create_or_update_lead.delay',
+        'pythonpro.domain.user_domain._email_marketing_facade.create_or_update_lead.delay',
         side_effect=email_marketing_facade.create_or_update_lead
     )
 
@@ -46,7 +48,7 @@ def tag_as_mock(mocker):
 
 @pytest.fixture
 def sync_on_discourse_mock(mocker):
-    return mocker.patch('pythonpro.domain.user_facade.sync_user_on_discourse.delay')
+    return mocker.patch('pythonpro.domain.user_domain.sync_user_on_discourse.delay')
 
 
 @pytest.fixture
@@ -66,10 +68,11 @@ def test_status_code(resp):
     assert resp.status_code == 200
 
 
-def test_send_purchase_notification(resp, send_purchase_notification_mock):
-    send_purchase_notification_mock.assert_called_once_with(
-        django_pagarme_facade.find_payment_by_transaction(TRANSACTION_ID).id
-    )
+def test_send_purchase_notification(resp, send_purchase_notification_mock, active_product_item):
+    if active_product_item.slug.startswith('bootcamp'):
+        send_purchase_notification_mock.assert_called_once_with(
+            django_pagarme_facade.find_payment_by_transaction(TRANSACTION_ID).id
+        )
 
 
 def test_user_is_created(resp, django_user_model):
@@ -98,6 +101,15 @@ def test_created_user_tagged_with_boleto(resp, django_user_model, tag_as_mock, a
     User = django_user_model
     user = User.objects.first()
     tag_as_mock.assert_called_once_with(user.email, user.id, f'{active_product_item.slug}-boleto')
+
+
+def test_phone_in_the_parameters(resp, create_or_update_lead_mock):
+    create_or_update_lead_mock.assert_called_once_with(
+        'Foo',
+        'foo@email.com',
+        id=mock.ANY,
+        phone='+5512999999999'
+    )
 
 
 # Tests user logged

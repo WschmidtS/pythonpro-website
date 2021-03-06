@@ -9,17 +9,17 @@ from pythonpro.django_assertions import dj_assert_contains
 
 @pytest.fixture
 def tag_as_mock(mocker):
-    return mocker.patch('pythonpro.domain.user_facade._email_marketing_facade.tag_as.delay')
+    return mocker.patch('pythonpro.domain.user_domain._email_marketing_facade.tag_as.delay')
 
 
 @pytest.fixture
 def visit_member_landing_page_mock(mocker):
-    return mocker.patch('pythonpro.domain.user_facade._core_facade.visit_member_landing_page')
+    return mocker.patch('pythonpro.domain.user_domain._core_facade.visit_member_landing_page')
 
 
 @pytest.fixture
 def subscribe_to_waiting_list_mock(mocker):
-    return mocker.patch('pythonpro.checkout.views.user_facade.subscribe_to_waiting_list')
+    return mocker.patch('pythonpro.checkout.views.user_domain.subscribe_to_waiting_list')
 
 
 begin_and_finish = [
@@ -70,16 +70,20 @@ def test_no_tagging(resp_no_user, tag_as_mock):
 def test_post_with_user(dt, client, freezer, subscribe_to_waiting_list_mock, logged_user):
     freezer.move_to(dt)
     client.force_login(logged_user)
-    client.post(
+    resp_with_user = client.post(
         reverse('checkout:bootcamp_lp') + '?utm_source=google',
         data={'email': 'jhon@email.com', 'first_name': 'Jhon', 'phone': '+5512999999999'}
     )
-    subscribe_to_waiting_list_mock.assert_called_once_with(logged_user, '+5512999999999', 'google')
+    subscribe_to_waiting_list_mock.assert_called_once_with(
+        resp_with_user.cookies['sessionid'].value,
+        logged_user,
+        '+5512999999999',
+        'google')
 
 
 @pytest.fixture
 def subscribe_anonymous_user_to_waiting_list_mock(mocker):
-    return mocker.patch('pythonpro.checkout.views.user_facade.subscribe_anonymous_user_to_waiting_list')
+    return mocker.patch('pythonpro.checkout.views.user_domain.subscribe_anonymous_user_to_waiting_list')
 
 
 @pytest.mark.parametrize('dt', begin_and_finish)
@@ -90,4 +94,4 @@ def test_post_absent_user(dt, client, freezer, subscribe_anonymous_user_to_waiti
         data={'email': 'jhon@email.com', 'first_name': 'Jhon', 'phone': '+5512999999999'}
     )
     subscribe_anonymous_user_to_waiting_list_mock.assert_called_once_with(
-        'jhon@email.com', 'Jhon', '+5512999999999', 'google')
+        None, 'jhon@email.com', 'Jhon', '+5512999999999', 'google')

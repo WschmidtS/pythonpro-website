@@ -156,7 +156,7 @@
             <img class="footer__group__content__item__icon" src="{% static 'img/spp/footer/phone.jpg' %}" alt="Ícone de um telefone na cor verde abacate">
             <div>
               <h4 class="footer__group__content__item__title fw-700 text-blue text-uppercase">Ligue para gente</h4>
-              <p class="footer__group__content__item__description fw-300 text-gray">+55 84 99464-4699</p>
+              <p class="footer__group__content__item__description fw-300 text-gray">+55 12 99141-5422</p>
             </div>
           </div>
 
@@ -193,7 +193,10 @@
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" async></script>
-  <script src="{% static 'js/spp/countdown.min.js' %}" async></script>
+  <script src="{% static 'js/spp/countdown.js' %}"></script>
+  <script>
+    initCountDown(new Date('Aug 10, 2020 23:59:59').getTime());
+  </script>
   {% endblock %}
   {% block extrabody %}{% endblock extrabody %}
 </body>
